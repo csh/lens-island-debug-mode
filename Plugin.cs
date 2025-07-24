@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System.Diagnostics.CodeAnalysis;
+using BepInEx;
 using HarmonyLib;
 
 namespace LensIslandDebugMode;
@@ -13,38 +14,38 @@ public class DebugModePlugin : BaseUnityPlugin
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
 
         _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
-        _harmony.PatchAll();
+        _harmony.PatchAll(typeof(DebugConsolePatches));
     }
 
     private void OnDestroy()
     {
         _harmony?.UnpatchSelf();
     }
-    
-    [HarmonyPatch(typeof(DebugConsole), nameof(DebugConsole.DevBuild), MethodType.Getter)]
-    class Patch_DevBuild
+
+    public static class DebugConsolePatches
     {
-        static bool Prefix(ref bool __result)
+        [HarmonyPrefix, HarmonyPatch(typeof(DebugConsole), nameof(DebugConsole.DebugCommandAllowed))]
+        public static bool DebugCommandAllowedPrefix(
+            [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Harmony")]
+            ref bool __result)
         {
             __result = true;
             return false;
         }
-    }
 
-    [HarmonyPatch(typeof(DebugConsole), nameof(DebugConsole.DevPlayingLiveBuild), MethodType.Getter)]
-    class Patch_DevPlayingLiveBuild
-    {
-        static bool Prefix(ref bool __result)
+        [HarmonyPrefix, HarmonyPatch(typeof(DebugConsole), nameof(DebugConsole.DevBuild), MethodType.Getter)]
+        public static bool DevBuildPrefix(
+            [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Harmony")]
+            ref bool __result)
         {
             __result = true;
             return false;
         }
-    }
 
-    [HarmonyPatch(typeof(DebugConsole), nameof(DebugConsole.DebugCommandAllowed))]
-    class Patch_DebugCommandAllowed
-    {
-        static bool Prefix(ref bool __result)
+        [HarmonyPrefix, HarmonyPatch(typeof(DebugConsole), nameof(DebugConsole.DevPlayingLiveBuild), MethodType.Getter)]
+        public static bool DevPlayingLiveBuildPrefix(
+            [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Harmony")]
+            ref bool __result)
         {
             __result = true;
             return false;
